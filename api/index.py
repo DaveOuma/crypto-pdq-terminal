@@ -2,6 +2,10 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import sys
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.payment import PaymentProcessor, validate_card
 from core.binance_client import BinanceConnector
@@ -13,7 +17,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Enable CORS for web clients
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,14 +25,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize connectors
+# Initialize connectors with error handling
+binance = None
+processor = None
+
 try:
-    binance = BinanceConnector()
-    processor = PaymentProcessor()
-except ValueError as e:
-    binance = None
-    processor = None
-    print(f"ERROR: {e}")
+    # Check if API keys exist
+    api_key = os.getenv("BINANCE_API_KEY")
+    api_secret = os.getenv("BINANCE_API_SECRET")
+    
+    if not api_key or not api_secret:
+        print("WARNING: Binance API keys not found in environment")
+    else:
+        binance = BinanceConnector()
+        processor = PaymentProcessor()
+        print("Binance connector initialized successfully")
+except Exception as e:
+    print(f"ERROR initializing Binance: {e}")
 
 
 @app.get("/")
@@ -37,6 +50,7 @@ async def root():
     return {
         "service": "Crypto PDQ Terminal API",
         "status": "running" if binance else "degraded (Binance not configured)",
+        "env_vars_set": bool(os.getenv("BINANCE_API_KEY")),
         "endpoints": [
             "POST /purchase",
             "GET /price/{crypto_type}",
@@ -48,14 +62,7 @@ async def root():
 
 @app.post("/purchase", status_code=status.HTTP_200_OK)
 async def purchase(payload: PurchaseRequest):
-    """
-    Purchase crypto using card details.
-    
-    - Validates card (Luhn algorithm)
-    - Fetches real-time Binance price
-    - Simulates payment authorization
-    - Returns transaction details
-    """
+    """Purchase crypto using card details."""
     if not binance:
         raise HTTPException(
             status_code=503,
@@ -76,7 +83,7 @@ async def purchase(payload: PurchaseRequest):
         # Calculate crypto amount
         crypto_amount = payload.amount / crypto_price
         
-        # Process payment (card_number, expiry, cvv, amount, crypto_type, crypto_amount, crypto_price)
+        # Process payment
         card_number = payload.card_number
         result = processor.authorize_payment(
             payload.card_number,
@@ -98,9 +105,7 @@ async def purchase(payload: PurchaseRequest):
 
 @app.get("/price/{crypto_type}")
 async def get_price(crypto_type: str):
-    """
-    Get current price for a cryptocurrency from Binance.
-    """
+    """Get current price for a cryptocurrency."""
     if not binance:
         raise HTTPException(
             status_code=503,
@@ -124,9 +129,7 @@ async def get_price(crypto_type: str):
 
 @app.get("/balance/{asset}")
 async def get_balance(asset: str = "USDT"):
-    """
-    Get balance for a specific asset in Binance account.
-    """
+    """Get balance for a specific asset."""
     if not binance:
         raise HTTPException(
             status_code=503,
@@ -143,9 +146,7 @@ async def get_balance(asset: str = "USDT"):
 
 @app.get("/orders/{symbol}")
 async def get_orders(symbol: str = "BTCUSDT", limit: int = 5):
-    """
-    Get recent orders from Binance.
-    """
+    """Get recent orders."""
     if not binance:
         raise HTTPException(
             status_code=503,

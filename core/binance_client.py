@@ -10,7 +10,10 @@ class BinanceConnector:
         if not self.api_key or not self.api_secret:
             raise ValueError("Binance API keys not configured")
         
-        self.client = Client(self.api_key, self.api_secret)
+        try:
+            self.client = Client(self.api_key, self.api_secret)
+        except Exception as e:
+            raise ValueError(f"Failed to initialize Binance client: {e}")
 
     def get_crypto_price(self, crypto_type):
         """Get current price from Binance."""
