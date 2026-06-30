@@ -10,5 +10,14 @@
       "src": "/(.*)",
       "dest": "api/index.py"
     }
+<<<<<<< HEAD
   ]
 }
+=======
+  ],
+  "env": {
+    "BINANCE_API_KEY": "@binance_api_key",
+    "BINANCE_API_SECRET": "@binance_api_secret"
+  }
+}
+>>>>>>> 7dad422f72aeb355aed6eabf142d29618266a8ea
