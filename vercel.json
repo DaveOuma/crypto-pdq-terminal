@@ -12,7 +12,7 @@
     }
   ],
   "env": {
-    "BINANCE_API_KEY": "@binance_api_key",
-    "BINANCE_API_SECRET": "@binance_api_secret"
+    "BINANCE_API_KEY": "@Uk1xexujBMlmMRPpwOaGvWoKrJ7IhTtdyhBVKb1glA5ONHvn5fiXD9WYCyADVKIH",
+    "BINANCE_API_SECRET": "@SDpXzrOjrFGvkD3gxxvaVtUjGy364fkUPBDZ1figk9XaUV3diAsE1IisiMfh01oP"
   }
 }
