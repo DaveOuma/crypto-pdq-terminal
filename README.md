@@ -35,4 +35,4 @@ For educational purposes only. Not financial advice. Test with small amounts fir
 
 ---
 
-Built with coffee and late-night coding sessions
+- Built with `coffee` and late-night `coding sessions`
